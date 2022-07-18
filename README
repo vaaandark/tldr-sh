@@ -1,0 +1,23 @@
+usage: tldr command [options]
+
+shell command line client for tldr
+
+positional arguments:
+  command               command to lookup
+
+options:
+  -h, --help            show this help message and exit
+                        and exit
+  -s "KEYWORDS"         Search for a specific command
+                        from a query
+  -u, --update_cache    Update the local cache of pages
+                        and exit
+  -p PLATFORM
+                        Override the operating system
+                        [linux, osx, sunos, windows,
+                        common]
+  -l, --list            List all available commands for
+                        operating system
+  -L LANGUAGE, --language LANGUAGE
+                        Override the default language
+  -m, --markdown        Just print the plain page file.

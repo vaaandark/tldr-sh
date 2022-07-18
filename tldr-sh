@@ -1,0 +1,134 @@
+#!/bin/bash
+#set -vx
+
+# default language is EN
+
+tldr_dir="$HOME/.tldr/tldr/pages"
+host_platform=$(uname | tr '[:upper:]' '[:lower:]')
+
+CAT='bat'
+
+# print usage
+usage() {
+  cat <<EOF
+usage: tldr command [options]
+
+shell command line client for tldr
+
+positional arguments:
+  command               command to lookup
+
+options:
+  -i                    init tldr cache directory
+  -u                    update tldr cache directory
+  -h, --help            show this help message and exit
+                        and exit
+  -s "KEYWORDS"         Search for a specific command
+                        from a query
+  -u, --update_cache    Update the local cache of pages
+                        and exit
+  -p PLATFORM
+                        Override the operating system
+                        [linux, osx, sunos, windows,
+                        common]
+  -l, --list            List all available commands for
+                        operating system
+  -L LANGUAGE, --language LANGUAGE
+                        Override the default language
+  -m, --markdown        Just print the plain page file.
+EOF
+}
+
+# no arguments
+if [[ -z $@ ]]; then
+  usage
+  exit 1
+fi
+
+while getopts "iulL:mhs:p:" options; do
+  case "${options}" in
+    # init tldr
+    i)
+      (
+        if [[ ! -d "${tldr_dir}" ]]; then
+          mkdir -p "${tldr_dir}"
+        fi
+        cd "${tldr_dir}"
+        git clone git@github.com:tldr-pages/tldr.git "${tldr_dir}"
+      )
+      exit $?
+      ;;
+    # update tldr dir
+    u)
+      (
+        cd "${tldr_dir}"
+        git pull
+      )
+      exit $?
+      ;;
+    # list all available commands
+    l)
+      for item in $(ls "${tldr_dir}/common"); do
+        echo "${item%.md}"
+      done
+      for item in $(ls "${tldr_dir}/${host_platform}"); do
+        echo "${item%.md}"
+      done
+      exit 0
+      ;;
+    # set lang
+    L)
+      lang=".${OPTARG}"
+      ;;
+    # cat or bat
+    m)
+      CAT='cat'
+      ;;
+    # help
+    h)
+      usage
+      ;;
+    # search command
+    s)
+      name="${OPTARG}"
+      ls "${tldr_dir}/common" | grep "${name}" | cut -d '.' -f1
+      ls "${tldr_dir}/${host_platform}" | grep "${name}" | cut -d '.' -f1
+      exit 0
+      ;;
+    # override platform
+    p)
+      host_platform="${OPTARG}"
+      ;;
+    ?)
+      cat << EOF
+usage: tldr command [options]
+tldr: error: unrecognized arguments
+EOF
+    exit 2
+  esac
+done
+
+shift $(($OPTIND - 1))
+
+cmd=$1
+echo $@
+
+# check locale tldr dir
+if [[ ! -d "${tldr_dir}" ]]; then
+  echo 'tldr: error: please clone git@github.com:tldr-pages/tldr.git to ~/.tldr/tldr first' >&2
+  exit 1;
+fi
+
+platform=('common' 'linux' 'osx' 'sunos' 'windows')
+for plt in "${platform[@]}"; do
+  manual="${tldr_dir}${lang}/${plt}/${cmd}.md"
+  if [[ -f "${manual}" ]]; then
+    $CAT "${manual}"
+    echo "found command in ${plt} pages"
+    exit 0
+  fi
+done
+
+# not found
+exit 1
+
