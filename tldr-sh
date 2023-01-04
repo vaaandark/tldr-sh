@@ -6,7 +6,7 @@
 tldr_dir="$HOME/.tldr/tldr/pages"
 host_platform=$(uname | tr '[:upper:]' '[:lower:]')
 
-CAT='bat'
+CAT='bat --plain'
 
 # print usage
 usage() {
@@ -131,4 +131,3 @@ done
 
 # not found
 exit 1
-
