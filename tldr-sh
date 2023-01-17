@@ -40,7 +40,7 @@ EOF
 }
 
 # no arguments
-if [[ -z $@ ]]; then
+if [[ $# -eq 0 ]]; then
   usage
   exit 1
 fi
@@ -53,7 +53,7 @@ while getopts "iulL:mhs:p:" options; do
         if [[ ! -d "${tldr_dir}" ]]; then
           mkdir -p "${tldr_dir}"
         fi
-        cd "${tldr_dir}"
+        cd "${tldr_dir}" || exit 1
         git clone git@github.com:tldr-pages/tldr.git "${tldr_dir}"
       )
       exit $?
@@ -61,17 +61,17 @@ while getopts "iulL:mhs:p:" options; do
     # update tldr dir
     u)
       (
-        cd "${tldr_dir}"
+        cd "${tldr_dir}" || exit 1
         git pull
       )
       exit $?
       ;;
     # list all available commands
     l)
-      for item in $(ls "${tldr_dir}/common"); do
+      for item in "${tldr_dir}/common"/*; do
         echo "${item%.md}"
       done
-      for item in $(ls "${tldr_dir}/${host_platform}"); do
+      for item in "${tldr_dir}/${host_platform}"/*; do
         echo "${item%.md}"
       done
       exit 0
@@ -91,8 +91,8 @@ while getopts "iulL:mhs:p:" options; do
     # search command
     s)
       name="${OPTARG}"
-      ls "${tldr_dir}/common" | grep "${name}" | cut -d '.' -f1
-      ls "${tldr_dir}/${host_platform}" | grep "${name}" | cut -d '.' -f1
+      find "${tldr_dir}/common/" -name "*${name}*" -exec basename {} .md \;
+      find "${tldr_dir}/${host_platform}/" -name "*${name}*" -exec basename {} .md \;
       exit 0
       ;;
     # override platform
@@ -108,10 +108,10 @@ EOF
   esac
 done
 
-shift $(($OPTIND - 1))
+shift $((OPTIND - 1))
 
 cmd=$1
-echo $@
+echo "$@"
 
 # check locale tldr dir
 if [[ ! -d "${tldr_dir}" ]]; then
