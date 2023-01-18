@@ -7,6 +7,8 @@ tldr_dir="$HOME/.tldr/tldr/pages"
 host_platform=$(uname | tr '[:upper:]' '[:lower:]')
 
 CAT='bat --plain'
+# or
+# CAT='glow'
 
 # print usage
 usage() {
@@ -110,7 +112,7 @@ done
 
 shift $((OPTIND - 1))
 
-cmd=$1
+cmd="$(echo "$@" | tr ' ' -)"
 echo "$@"
 
 # check locale tldr dir
